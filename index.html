@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brewery Tracker - TTB Compliance & Batch Management">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Brewery Tracker">
+  <meta name="apple-mobile-web-app-icon" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231e293b' width='192' height='192'/><text x='50%' y='50%' font-size='120' font-weight='bold' fill='%23fbbf24' text-anchor='middle' dominant-baseline='central' font-family='system-ui'>🍺</text></svg>">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%231e293b' width='100' height='100'/><text x='50' y='50' font-size='70' text-anchor='middle' dominant-baseline='central'>🍺</text></svg>">
+  
+  <title>Brewery Tracker</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #fbbf24;
+      --primary-dark: #f59e0b;
+      --bg-dark: #0f172a;
+      --bg-medium: #1e293b;
+      --bg-light: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border: #475569;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #0f172a 50%, var(--bg-dark) 100%);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      position: fixed;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    html, body, #app {
+      height: 100%;
+      width: 100%;
+    }
+
+    /* Scrollable container */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 20px;
+    }
+
+    /* Hide scrollbar but keep scrolling */
+    .content-area::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .content-area::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .content-area::-webkit-scrollbar-thumb {
+      background: var(--bg-light);
+      border-radius: 2px;
+    }
+
+    header {
+      background: rgba(15, 23, 42, 0.8);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem;
+      flex-shrink: 0;
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--primary) 0%, #f97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+
+    header p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    main {
+      max-width: 100%;
+      padding: 1rem;
+      flex: 1;
+      overflow: auto;
+    }
+
+    /* Buttons */
+    button {
+      font-family: inherit;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-size: 0.875rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #000;
+      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 6px rgba(251, 191, 36, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg-light);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:active {
+      background: #475569;
+    }
+
+    .btn-success {
+      background: var(--success);
+      color: #000;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    /* Forms */
+    input, textarea, select {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-medium);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 0.5rem;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+    }
+
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-row.full {
+      grid-template-columns: 1fr;
+    }
+
+    /* Cards */
+    .card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      backdrop-filter: blur(4px);
+    }
+
+    .card:active {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: var(--primary);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+
+    .badge-default {
+      background: var(--bg-light);
+      color: var(--text-secondary);
+    }
+
+    .badge-primary {
+      background: rgba(251, 191, 36, 0.2);
+      color: var(--primary);
+    }
+
+    .badge-info {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .badge-success {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+    }
+
+    .badge-warning {
+      background: rgba(234, 179, 8, 0.2);
+      color: var(--warning);
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 0.5rem;
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    .filter-tab {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 0.5rem;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+    }
+
+    .filter-tab.active {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+    }
+
+    /* Search */
+    .search-box {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-medium);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state p {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 50;
+      display: none;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .modal {
+      background: var(--bg-medium);
+      border-top: 2px solid var(--primary);
+      border-radius: 1rem 1rem 0 0;
+      padding: 1.5rem;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+      }
+      to {
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h2 {
+      font-size: 1.5rem;
+      color: var(--primary);
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+    }
+
+    /* Expanded content */
+    .expanded-content {
+      display: none;
+      background: rgba(20, 30, 48, 0.6);
+      border-top: 1px solid var(--border);
+      margin: -1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 0 0 0.75rem 0.75rem;
+      font-size: 0.875rem;
+    }
+
+    .expanded-content.active {
+      display: block;
+    }
+
+    .expanded-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .expanded-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .expanded-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .expanded-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+    }
+
+    .expanded-row:last-child {
+      border-bottom: none;
+    }
+
+    .expanded-row-label {
+      color: var(--text-muted);
+    }
+
+    .expanded-row-value {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+
+    /* Status bar */
+    .status-bar {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-indicator.connected {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-indicator.disconnected {
+      background: var(--warning);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Loading spinner */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(251, 191, 36, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Action buttons */
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: space-between;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      header h1 {
+        font-size: 1.25rem;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      main {
+        padding: 0.75rem;
+      }
+    }
+
+    /* Install prompt */
+    .install-banner {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #000;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      font-size: 0.875rem;
+    }
+
+    .install-banner.hidden {
+      display: none;
+    }
+
+    .install-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .install-text {
+      flex: 1;
+    }
+
+    .install-button {
+      background: #000;
+      color: var(--primary);
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 700;
+      white-space: nowrap;
+      border: none;
+      cursor: pointer;
+    }
+
+    .offline-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--danger);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      z-index: 30;
+      display: none;
+    }
+
+    .offline-badge.show {
+      display: block;
+      animation: slideInUp 0.3s ease;
+    }
+
+    @keyframes slideInUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    // Service Worker registration
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('Service Worker registered'))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+
+    // Install prompt handling
+    let deferredPrompt;
+    const installBanner = document.querySelector('.install-banner');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const banner = document.getElementById('install-banner');
+      if (banner) banner.classList.remove('hidden');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('App installed successfully');
+      const banner = document.getElementById('install-banner');
+      if (banner) banner.classList.add('hidden');
+    });
+
+    // Online/offline handling
+    window.addEventListener('online', () => {
+      const badge = document.querySelector('.offline-badge');
+      if (badge) badge.classList.remove('show');
+    });
+
+    window.addEventListener('offline', () => {
+      const badge = document.querySelector('.offline-badge');
+      if (badge) badge.classList.add('show');
+    });
+  </script>
+
+  <script type="module">
+    const { useState, useEffect, useRef } = React;
+    const { createRoot } = ReactDOM;
+
+    const BreweryTrackerApp = () => {
+      const [batches, setBatches] = useState([]);
+      const [showForm, setShowForm] = useState(false);
+      const [editingId, setEditingId] = useState(null);
+      const [expandedBatch, setExpandedBatch] = useState(null);
+      const [filterStatus, setFilterStatus] = useState('all');
+      const [searchTerm, setSearchTerm] = useState('');
+      const [isOnline, setIsOnline] = useState(navigator.onLine);
+      const [installPrompt, setInstallPrompt] = useState(null);
+
+      const [formData, setFormData] = useState({
+        beerName: '',
+        batchNumber: '',
+        style: '',
+        productionDate: '',
+        completionDate: '',
+        volumeProduced: '',
+        volumeUnit: 'gallons',
+        abv: '',
+        ibu: '',
+        recipeNotes: '',
+        ingredients: '',
+        packagingFormat: 'bottles',
+        packagingQuantity: '',
+        labelInfo: '',
+        distributor: '',
+        status: 'in-production',
+        createdAt: new Date().toISOString(),
+      });
+
+      // Load from localStorage
+      useEffect(() => {
+        const saved = localStorage.getItem('breweryBatches');
+        if (saved) {
+          try {
+            setBatches(JSON.parse(saved));
+          } catch (e) {
+            console.error('Failed to load batches:', e);
+          }
+        }
+      }, []);
+
+      // Save to localStorage
+      useEffect(() => {
+        localStorage.setItem('breweryBatches', JSON.stringify(batches));
+      }, [batches]);
+
+      // Listen for online/offline
+      useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+        };
+      }, []);
+
+      const resetForm = () => {
+        setFormData({
+          beerName: '',
+          batchNumber: '',
+          style: '',
+          productionDate: '',
+          completionDate: '',
+          volumeProduced: '',
+          volumeUnit: 'gallons',
+          abv: '',
+          ibu: '',
+          recipeNotes: '',
+          ingredients: '',
+          packagingFormat: 'bottles',
+          packagingQuantity: '',
+          labelInfo: '',
+          distributor: '',
+          status: 'in-production',
+          createdAt: new Date().toISOString(),
+        });
+        setEditingId(null);
+      };
+
+      const handleAddBatch = (e) => {
+        e.preventDefault();
+        if (!formData.beerName || !formData.batchNumber) {
+          alert('Please fill in Beer Name and Batch Number');
+          return;
+        }
+
+        if (editingId) {
+          setBatches(batches.map(b => b.id === editingId ? { ...formData, id: editingId } : b));
+          setEditingId(null);
+        } else {
+          const newBatch = {
+            ...formData,
+            id: Date.now().toString(),
+          };
+          setBatches([...batches, newBatch]);
+        }
+
+        resetForm();
+        setShowForm(false);
+      };
+
+      const handleEditBatch = (batch) => {
+        setFormData(batch);
+        setEditingId(batch.id);
+        setShowForm(true);
+        window.scrollTo(0, 0);
+      };
+
+      const handleDeleteBatch = (id) => {
+        if (confirm('Delete this batch?')) {
+          setBatches(batches.filter(b => b.id !== id));
+        }
+      };
+
+      const filteredBatches = batches
+        .filter(b => filterStatus === 'all' || b.status === filterStatus)
+        .filter(b => 
+          b.beerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          b.batchNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+      const calculateExciseTax = (abv, volume, unit) => {
+        const actualVolume = unit === 'gallons' ? volume / 31 : volume;
+        return (actualVolume * 13.50).toFixed(2);
+      };
+
+      const getStatusColor = (status) => {
+        switch (status) {
+          case 'in-production': return 'badge-info';
+          case 'packaging': return 'badge-warning';
+          case 'distributed': return 'badge-success';
+          default: return 'badge-default';
+        }
+      };
+
+      return (
+        <div className="app-container">
+          <header>
+            <h1>🍺 Brewery Tracker</h1>
+            <p>TTB Compliance & Batch Management</p>
+          </header>
+
+          {!isOnline && <div className="offline-badge show">📴 Offline Mode</div>}
+
+          <div className="content-area">
+            <main>
+              {/* Install Banner */}
+              <div id="install-banner" className="install-banner hidden">
+                <div className="install-icon">📱</div>
+                <div className="install-text">Add Brewery Tracker to your home screen</div>
+                <button 
+                  className="install-button"
+                  onClick={() => {
+                    const deferredPrompt = window.deferredPrompt;
+                    if (deferredPrompt) {
+                      deferredPrompt.prompt();
+                      deferredPrompt.userChoice.then(choiceResult => {
+                        if (choiceResult.outcome === 'accepted') {
+                          window.deferredPrompt = null;
+                        }
+                      });
+                    }
+                  }}
+                >
+                  Install
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="btn-group">
+                <button 
+                  className="btn-primary" 
+                  onClick={() => {
+                    setShowForm(!showForm);
+                    if (showForm) resetForm();
+                  }}
+                  style={{flex: 1}}
+                >
+                  {showForm ? '✕ Cancel' : '+ New Batch'}
+                </button>
+              </div>
+
+              {/* Form */}
+              {showForm && (
+                <div className="card" style={{background: 'rgba(51, 65, 85, 0.3)'}}>
+                  <h2 style={{color: '#fbbf24', marginBottom: '1rem', fontSize: '1.25rem'}}>
+                    {editingId ? 'Edit Batch' : 'New Batch'}
+                  </h2>
+                  <form onSubmit={handleAddBatch}>
+                    <div className="form-group">
+                      <label>Beer Name *</label>
+                      <input
+                        type="text"
+                        value={formData.beerName}
+                        onChange={(e) => setFormData({...formData, beerName: e.target.value})}
+                        placeholder="e.g., Amber Ale"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Batch Number *</label>
+                        <input
+                          type="text"
+                          value={formData.batchNumber}
+                          onChange={(e) => setFormData({...formData, batchNumber: e.target.value})}
+                          placeholder="e.g., BATCH-001"
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Style</label>
+                        <input
+                          type="text"
+                          value={formData.style}
+                          onChange={(e) => setFormData({...formData, style: e.target.value})}
+                          placeholder="IPA, Stout, etc"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Production Date</label>
+                        <input
+                          type="date"
+                          value={formData.productionDate}
+                          onChange={(e) => setFormData({...formData, productionDate: e.target.value})}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Completion Date</label>
+                        <input
+                          type="date"
+                          value={formData.completionDate}
+                          onChange={(e) => setFormData({...formData, completionDate: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Volume Produced</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.volumeProduced}
+                          onChange={(e) => setFormData({...formData, volumeProduced: e.target.value})}
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>Unit</label>
+                        <select
+                          value={formData.volumeUnit}
+                          onChange={(e) => setFormData({...formData, volumeUnit: e.target.value})}
+                        >
+                          <option value="gallons">Gallons</option>
+                          <option value="barrels">Barrels</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>ABV (%)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={formData.abv}
+                          onChange={(e) => setFormData({...formData, abv: e.target.value})}
+                          placeholder="0.0"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>IBU</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={formData.ibu}
+                          onChange={(e) => setFormData({...formData, ibu: e.target.value})}
+                          placeholder="0.0"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Status</label>
+                        <select
+                          value={formData.status}
+                          onChange={(e) => setFormData({...formData, status: e.target.value})}
+                        >
+                          <option value="in-production">In Production</option>
+                          <option value="packaging">Packaging</option>
+                          <option value="distributed">Distributed</option>
+                          <option value="archived">Archived</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Packaging</label>
+                        <select
+                          value={formData.packagingFormat}
+                          onChange={(e) => setFormData({...formData, packagingFormat: e.target.value})}
+                        >
+                          <option value="bottles">Bottles</option>
+                          <option value="cans">Cans</option>
+                          <option value="kegs">Kegs</option>
+                          <option value="bulk">Bulk</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>Packaging Quantity</label>
+                      <input
+                        type="number"
+                        value={formData.packagingQuantity}
+                        onChange={(e) => setFormData({...formData, packagingQuantity: e.target.value})}
+                        placeholder="100"
+                      />
+                    </div>
+
+                    <div className="form-group form-row full">
+                      <label>Recipe Notes</label>
+                      <textarea
+                        value={formData.recipeNotes}
+                        onChange={(e) => setFormData({...formData, recipeNotes: e.target.value})}
+                        placeholder="Brewing notes..."
+                        rows="3"
+                        style={{marginBottom: 0}}
+                      />
+                    </div>
+
+                    <div className="form-group form-row full">
+                      <label>Ingredients</label>
+                      <textarea
+                        value={formData.ingredients}
+                        onChange={(e) => setFormData({...formData, ingredients: e.target.value})}
+                        placeholder="List ingredients..."
+                        rows="3"
+                        style={{marginBottom: 0}}
+                      />
+                    </div>
+
+                    <div className="form-group form-row full">
+                      <label>Label Info</label>
+                      <textarea
+                        value={formData.labelInfo}
+                        onChange={(e) => setFormData({...formData, labelInfo: e.target.value})}
+                        placeholder="Label details..."
+                        rows="2"
+                        style={{marginBottom: 0}}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Distributor</label>
+                      <input
+                        type="text"
+                        value={formData.distributor}
+                        onChange={(e) => setFormData({...formData, distributor: e.target.value})}
+                        placeholder="Distributor name"
+                      />
+                    </div>
+
+                    <button type="submit" className="btn-primary" style={{width: '100%', marginTop: '1rem'}}>
+                      {editingId ? 'Update Batch' : 'Create Batch'}
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* Search & Filters */}
+              <input
+                type="text"
+                placeholder="Search batches..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-box"
+              />
+
+              <div className="filter-tabs">
+                {['all', 'in-production', 'packaging', 'distributed', 'archived'].map(status => (
+                  <button
+                    key={status}
+                    className={`filter-tab ${filterStatus === status ? 'active' : ''}`}
+                    onClick={() => setFilterStatus(status)}
+                  >
+                    {status.replace('-', ' ').charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+                  </button>
+                ))}
+              </div>
+
+              {/* Batch Cards */}
+              {filteredBatches.length === 0 ? (
+                <div className="empty-state">
+                  <p>No batches found</p>
+                  <p>Create your first batch to get started</p>
+                </div>
+              ) : (
+                filteredBatches.map(batch => (
+                  <div key={batch.id} className="card">
+                    <div className="card-header" onClick={() => setExpandedBatch(expandedBatch === batch.id ? null : batch.id)}>
+                      <div style={{flex: 1}}>
+                        <div className="card-title">{batch.beerName}</div>
+                        <div className="card-meta">
+                          <span className="badge badge-primary">{batch.batchNumber}</span>
+                          <span className={`badge ${getStatusColor(batch.status)}`}>
+                            {batch.status.replace('-', ' ')}
+                          </span>
+                        </div>
+                        <div className="card-meta" style={{marginTop: '0.5rem', fontSize: '0.8rem'}}>
+                          {batch.style && <span>📌 {batch.style}</span>}
+                          {batch.abv && <span>🍺 ABV: {batch.abv}%</span>}
+                          {batch.ibu && <span>🌾 IBU: {batch.ibu}</span>}
+                        </div>
+                      </div>
+                      <div className="action-buttons">
+                        <button
+                          className="btn-icon btn-secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditBatch(batch);
+                          }}
+                        >
+                          ✎
+                        </button>
+                        <button
+                          className="btn-icon btn-danger"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteBatch(batch.id);
+                          }}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </div>
+
+                    {expandedBatch === batch.id && (
+                      <div className="expanded-content active">
+                        {batch.volumeProduced && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">Production</div>
+                            <div className="expanded-row">
+                              <span className="expanded-row-label">Volume</span>
+                              <span className="expanded-row-value">{batch.volumeProduced} {batch.volumeUnit}</span>
+                            </div>
+                            {batch.productionDate && (
+                              <div className="expanded-row">
+                                <span className="expanded-row-label">Started</span>
+                                <span className="expanded-row-value">{new Date(batch.productionDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {batch.completionDate && (
+                              <div className="expanded-row">
+                                <span className="expanded-row-label">Completed</span>
+                                <span className="expanded-row-value">{new Date(batch.completionDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {batch.packagingQuantity && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">Packaging</div>
+                            <div className="expanded-row">
+                              <span className="expanded-row-label">Format</span>
+                              <span className="expanded-row-value">{batch.packagingFormat}</span>
+                            </div>
+                            <div className="expanded-row">
+                              <span className="expanded-row-label">Quantity</span>
+                              <span className="expanded-row-value">{batch.packagingQuantity}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {batch.abv && batch.volumeProduced && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">TTB Compliance</div>
+                            <div className="expanded-row">
+                              <span className="expanded-row-label">Est. Excise Tax</span>
+                              <span className="expanded-row-value" style={{color: '#fbbf24'}}>
+                                ${calculateExciseTax(batch.abv, batch.volumeProduced, batch.volumeUnit)}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {batch.distributor && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">Distribution</div>
+                            <div className="expanded-row">
+                              <span className="expanded-row-label">Distributor</span>
+                              <span className="expanded-row-value">{batch.distributor}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        {batch.recipeNotes && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">Recipe Notes</div>
+                            <p style={{color: '#cbd5e1', whiteSpace: 'pre-wrap', fontSize: '0.8rem'}}>{batch.recipeNotes}</p>
+                          </div>
+                        )}
+
+                        {batch.ingredients && (
+                          <div className="expanded-section">
+                            <div className="expanded-label">Ingredients</div>
+                            <p style={{color: '#cbd5e1', whiteSpace: 'pre-wrap', fontSize: '0.8rem'}}>{batch.ingredients}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+
+              {/* Stats */}
+              {filteredBatches.length > 0 && (
+                <div className="stats-grid">
+                  <div className="stat-card">
+                    <div className="stat-label">Total Batches</div>
+                    <div className="stat-value">{filteredBatches.length}</div>
+                  </div>
+                  {filteredBatches.some(b => b.volumeProduced) && (
+                    <div className="stat-card">
+                      <div className="stat-label">Total Volume</div>
+                      <div className="stat-value">
+                        {filteredBatches.reduce((sum, b) => sum + (parseFloat(b.volumeProduced) || 0), 0).toFixed(0)}
+                        <span style={{fontSize: '0.75rem', marginLeft: '0.5rem'}}>
+                          {filteredBatches[0]?.volumeUnit}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {filteredBatches.some(b => b.abv && b.volumeProduced) && (
+                    <div className="stat-card">
+                      <div className="stat-label">Est. Tax</div>
+                      <div className="stat-value">
+                        ${filteredBatches.reduce((sum, b) => sum + parseFloat(calculateExciseTax(b.abv, b.volumeProduced, b.volumeUnit) || 0), 0).toFixed(0)}
+                      </div>
+                    </div>
+                  )}
+                  {filteredBatches.some(b => b.abv) && (
+                    <div className="stat-card">
+                      <div className="stat-label">Avg ABV</div>
+                      <div className="stat-value">
+                        {(filteredBatches.filter(b => b.abv).reduce((sum, b) => sum + parseFloat(b.abv), 0) / filteredBatches.filter(b => b.abv).length).toFixed(1)}%
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    };
+
+    const root = createRoot(document.getElementById('app'));
+    root.render(<BreweryTrackerApp />);
+  </script>
+</body>
+</html>
