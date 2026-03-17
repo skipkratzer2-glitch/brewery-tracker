@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Brewery Tracker - TTB Compliance & Batch Management">
+  <meta name="theme-color" content="#1e293b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Brewery Tracker">
+  <link rel="manifest" href="manifest.json">
+  <title>Brewery Tracker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --primary: #fbbf24;
+      --primary-dark: #f59e0b;
+      --bg-dark: #0f172a;
+      --bg-medium: #1e293b;
+      --bg-light: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+      --border: #475569;
+      --success: #22c55e;
+      --danger: #ef4444;
+    }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #0f172a 50%, var(--bg-dark) 100%);
+      color: var(--text-primary);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: rgba(15, 23, 42, 0.95);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 1rem;
+      flex-shrink: 0;
+      backdrop-filter: blur(12px);
+    }
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--primary) 0%, #f97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+    header p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 1rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .btn {
+      padding: 0.75rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.875rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #000;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-secondary {
+      background: var(--bg-light);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      padding: 0.5rem 0.75rem;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-medium);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      font-size: 1rem;
+      font-family: inherit;
+      margin-bottom: 0.75rem;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+    }
+    label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.25rem;
+    }
+    .form-group { margin-bottom: 1rem; }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-row.full { grid-template-columns: 1fr; }
+    .card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .card:active {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: var(--primary);
+    }
+    .card-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    .card-meta {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      font-size: 0.75rem;
+      background: var(--bg-light);
+      color: var(--text-secondary);
+    }
+    .badge-primary {
+      background: rgba(251, 191, 36, 0.2);
+      color: var(--primary);
+    }
+    .search-box {
+      width: 100%;
+      padding: 0.75rem;
+      background: var(--bg-medium);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .filter-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      -webkit-overflow-scrolling: touch;
+    }
+    .filter-tab {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .filter-tab.active {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .expanded-content {
+      display: none;
+      background: rgba(20, 30, 48, 0.6);
+      border-top: 1px solid var(--border);
+      margin: -1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      border-radius: 0 0 0.75rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    .expanded-content.active { display: block; }
+    .expanded-section { margin-bottom: 1rem; }
+    .expanded-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+    .expanded-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(71, 85, 105, 0.3);
+      font-size: 0.875rem;
+    }
+    .expanded-row-label { color: var(--text-muted); }
+    .expanded-row-value {
+      color: var(--text-primary);
+      font-weight: 500;
+      font-family: 'Monaco', 'Courier New', monospace;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+      border: 1px solid var(--border);
+      background: var(--bg-light);
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .stat-card {
+      background: rgba(30, 41, 59, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 0.5rem;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 640px) {
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>🍺 Brewery Tracker</h1>
+      <p>TTB Compliance & Batch Management</p>
+    </header>
+    <main>
+      <button class="btn btn-primary" onclick="toggleForm()">+ New Batch</button>
+      <div id="form-container" class="hidden">
+        <div class="card" style="background: rgba(51, 65, 85, 0.3);">
+          <h2 style="color: #fbbf24; margin-bottom: 1rem; font-size: 1.25rem;" id="form-title">New Batch</h2>
+          <form onsubmit="handleAddBatch(event)">
+            <div class="form-group">
+              <label>Beer Name *</label>
+              <input type="text" id="beerName" placeholder="e.g., Amber Ale" required>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Batch Number *</label>
+                <input type="text" id="batchNumber" placeholder="e.g., BATCH-001" required>
+              </div>
+              <div class="form-group">
+                <label>Style</label>
+                <input type="text" id="style" placeholder="IPA, Stout, etc">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Production Date</label>
+                <input type="date" id="productionDate">
+              </div>
+              <div class="form-group">
+                <label>Completion Date</label>
+                <input type="date" id="completionDate">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Volume</label>
+                <input type="number" id="volumeProduced" step="0.01" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Unit</label>
+                <select id="volumeUnit">
+                  <option value="gallons">Gallons</option>
+                  <option value="barrels">Barrels</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>ABV (%)</label>
+                <input type="number" id="abv" step="0.1" placeholder="0.0">
+              </div>
+              <div class="form-group">
+                <label>IBU</label>
+                <input type="number" id="ibu" step="0.1" placeholder="0.0">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Status</label>
+                <select id="status">
+                  <option value="in-production">In Production</option>
+                  <option value="packaging">Packaging</option>
+                  <option value="distributed">Distributed</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Packaging</label>
+                <select id="packagingFormat">
+                  <option value="bottles">Bottles</option>
+                  <option value="cans">Cans</option>
+                  <option value="kegs">Kegs</option>
+                  <option value="bulk">Bulk</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Packaging Quantity</label>
+              <input type="number" id="packagingQuantity" placeholder="100">
+            </div>
+            <div class="form-group">
+              <label>Recipe Notes</label>
+              <textarea id="recipeNotes" rows="3" placeholder="Brewing notes..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Ingredients</label>
+              <textarea id="ingredients" rows="3" placeholder="List ingredients..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Label Info</label>
+              <textarea id="labelInfo" rows="2" placeholder="Label details..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Distributor</label>
+              <input type="text" id="distributor" placeholder="Distributor name">
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-bottom: 0;">Create Batch</button>
+          </form>
+        </div>
+      </div>
+      <button class="btn" onclick="syncToSheets()" style="background: #22c55e; margin-bottom: 1rem;">📊 Sync to Google Sheets</button>
+      <input type="text" id="searchBox" class="search-box" placeholder="Search batches..." onkeyup="renderBatches()">
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterStatus('all')">All</button>
+        <button class="filter-tab" onclick="filterStatus('in-production')">In Production</button>
+        <button class="filter-tab" onclick="filterStatus('packaging')">Packaging</button>
+        <button class="filter-tab" onclick="filterStatus('distributed')">Distributed</button>
+        <button class="filter-tab" onclick="filterStatus('archived')">Archived</button>
+      </div>
+      <div id="batches-container"></div>
+      <div id="stats-container"></div>
+    </main>
+  </div>
+  <script>
+    let batches = [];
+    let currentFilter = 'all';
+    let editingId = null;
+
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('breweryBatches');
+      if (saved) {
+        try {
+          batches = JSON.parse(saved);
+          renderBatches();
+        } catch (e) {
+          console.error('Failed to load batches:', e);
+        }
+      }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+    });
+
+    function saveBatches() {
+      localStorage.setItem('breweryBatches', JSON.stringify(batches));
+    }
+
+    function toggleForm() {
+      const formContainer = document.getElementById('form-container');
+      formContainer.classList.toggle('hidden');
+      if (!formContainer.classList.contains('hidden')) {
+        window.scrollTo(0, 0);
+      }
+    }
+
+    function handleAddBatch(e) {
+      e.preventDefault();
+      const beerName = document.getElementById('beerName').value;
+      const batchNumber = document.getElementById('batchNumber').value;
+      if (!beerName || !batchNumber) {
+        alert('Please fill in Beer Name and Batch Number');
+        return;
+      }
+      const batch = {
+        id: editingId || Date.now().toString(),
+        beerName,
+        batchNumber,
+        style: document.getElementById('style').value,
+        productionDate: document.getElementById('productionDate').value,
+        completionDate: document.getElementById('completionDate').value,
+        volumeProduced: document.getElementById('volumeProduced').value,
+        volumeUnit: document.getElementById('volumeUnit').value,
+        abv: document.getElementById('abv').value,
+        ibu: document.getElementById('ibu').value,
+        recipeNotes: document.getElementById('recipeNotes').value,
+        ingredients: document.getElementById('ingredients').value,
+        packagingFormat: document.getElementById('packagingFormat').value,
+        packagingQuantity: document.getElementById('packagingQuantity').value,
+        labelInfo: document.getElementById('labelInfo').value,
+        distributor: document.getElementById('distributor').value,
+        status: document.getElementById('status').value,
+      };
+      if (editingId) {
+        batches = batches.map(b => b.id === editingId ? batch : b);
+        editingId = null;
+      } else {
+        batches.push(batch);
+      }
+      saveBatches();
+      resetForm();
+      toggleForm();
+      renderBatches();
+    }
+
+    function resetForm() {
+      document.querySelector('form').reset();
+      editingId = null;
+      document.getElementById('form-title').textContent = 'New Batch';
+    }
+
+    function editBatch(id) {
+      const batch = batches.find(b => b.id === id);
+      if (!batch) return;
+      editingId = id;
+      document.getElementById('beerName').value = batch.beerName;
+      document.getElementById('batchNumber').value = batch.batchNumber;
+      document.getElementById('style').value = batch.style;
+      document.getElementById('productionDate').value = batch.productionDate;
+      document.getElementById('completionDate').value = batch.completionDate;
+      document.getElementById('volumeProduced').value = batch.volumeProduced;
+      document.getElementById('volumeUnit').value = batch.volumeUnit;
+      document.getElementById('abv').value = batch.abv;
+      document.getElementById('ibu').value = batch.ibu;
+      document.getElementById('recipeNotes').value = batch.recipeNotes;
+      document.getElementById('ingredients').value = batch.ingredients;
+      document.getElementById('packagingFormat').value = batch.packagingFormat;
+      document.getElementById('packagingQuantity').value = batch.packagingQuantity;
+      document.getElementById('labelInfo').value = batch.labelInfo;
+      document.getElementById('distributor').value = batch.distributor;
+      document.getElementById('status').value = batch.status;
+      document.getElementById('form-title').textContent = 'Edit Batch';
+      document.getElementById('form-container').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    function deleteBatch(id) {
+      if (confirm('Delete this batch?')) {
+        batches = batches.filter(b => b.id !== id);
+        saveBatches();
+        renderBatches();
+      }
+    }
+
+    function toggleExpanded(id) {
+      const expanded = document.getElementById(`expanded-${id}`);
+      if (expanded) {
+        expanded.classList.toggle('active');
+      }
+    }
+
+    function filterStatus(status) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+      renderBatches();
+    }
+
+    function calculateExciseTax(abv, volume, unit) {
+      if (!abv || !volume) return '0.00';
+      const actualVolume = unit === 'gallons' ? volume / 31 : volume;
+      return (actualVolume * 13.50).toFixed(2);
+    }
+
+    function renderBatches() {
+      const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+      const filtered = batches.filter(b => {
+        const matchesFilter = currentFilter === 'all' || b.status === currentFilter;
+        const matchesSearch = b.beerName.toLowerCase().includes(searchTerm) || b.batchNumber.toLowerCase().includes(searchTerm);
+        return matchesFilter && matchesSearch;
+      });
+
+      let html = '';
+      if (filtered.length === 0) {
+        html = '<div class="empty-state"><p>No batches found</p><p>Create your first batch to get started</p></div>';
+      } else {
+        filtered.forEach(batch => {
+          html += `
+            <div class="card">
+              <div onclick="toggleExpanded('${batch.id}')" style="cursor: pointer;">
+                <div class="card-title">${batch.beerName}</div>
+                <div class="card-meta">
+                  <span class="badge badge-primary">${batch.batchNumber}</span>
+                  <span class="badge">${batch.status.replace('-', ' ')}</span>
+                </div>
+                <div class="card-meta" style="margin-top: 0.5rem; font-size: 0.8rem;">
+                  ${batch.style ? `<span>📌 ${batch.style}</span>` : ''}
+                  ${batch.abv ? `<span>🍺 ABV: ${batch.abv}%</span>` : ''}
+                  ${batch.ibu ? `<span>🌾 IBU: ${batch.ibu}</span>` : ''}
+                </div>
+              </div>
+              <div class="action-buttons">
+                <button class="btn-icon" onclick="editBatch('${batch.id}')">✎</button>
+                <button class="btn-icon btn-danger" onclick="deleteBatch('${batch.id}')">🗑</button>
+              </div>
+              <div id="expanded-${batch.id}" class="expanded-content">
+                ${batch.volumeProduced ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">Production</div>
+                    <div class="expanded-row">
+                      <span class="expanded-row-label">Volume</span>
+                      <span class="expanded-row-value">${batch.volumeProduced} ${batch.volumeUnit}</span>
+                    </div>
+                    ${batch.productionDate ? `<div class="expanded-row"><span class="expanded-row-label">Started</span><span class="expanded-row-value">${new Date(batch.productionDate).toLocaleDateString()}</span></div>` : ''}
+                    ${batch.completionDate ? `<div class="expanded-row"><span class="expanded-row-label">Completed</span><span class="expanded-row-value">${new Date(batch.completionDate).toLocaleDateString()}</span></div>` : ''}
+                  </div>
+                ` : ''}
+                ${batch.abv && batch.volumeProduced ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">TTB Compliance</div>
+                    <div class="expanded-row">
+                      <span class="expanded-row-label">Est. Excise Tax</span>
+                      <span class="expanded-row-value" style="color: #fbbf24;">$${calculateExciseTax(batch.abv, batch.volumeProduced, batch.volumeUnit)}</span>
+                    </div>
+                  </div>
+                ` : ''}
+                ${batch.packagingQuantity ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">Packaging</div>
+                    <div class="expanded-row">
+                      <span class="expanded-row-label">Format</span>
+                      <span class="expanded-row-value">${batch.packagingFormat}</span>
+                    </div>
+                    <div class="expanded-row">
+                      <span class="expanded-row-label">Quantity</span>
+                      <span class="expanded-row-value">${batch.packagingQuantity}</span>
+                    </div>
+                  </div>
+                ` : ''}
+                ${batch.distributor ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">Distribution</div>
+                    <div class="expanded-row">
+                      <span class="expanded-row-label">Distributor</span>
+                      <span class="expanded-row-value">${batch.distributor}</span>
+                    </div>
+                  </div>
+                ` : ''}
+                ${batch.recipeNotes ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">Recipe Notes</div>
+                    <p style="color: #cbd5e1; white-space: pre-wrap; font-size: 0.8rem;">${batch.recipeNotes}</p>
+                  </div>
+                ` : ''}
+                ${batch.ingredients ? `
+                  <div class="expanded-section">
+                    <div class="expanded-label">Ingredients</div>
+                    <p style="color: #cbd5e1; white-space: pre-wrap; font-size: 0.8rem;">${batch.ingredients}</p>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+        html += `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Batches</div>
+              <div class="stat-value">${filtered.length}</div>
+            </div>
+            ${filtered.some(b => b.volumeProduced) ? `
+              <div class="stat-card">
+                <div class="stat-label">Total Volume</div>
+                <div class="stat-value">${filtered.reduce((sum, b) => sum + (parseFloat(b.volumeProduced) || 0), 0).toFixed(0)} ${filtered[0]?.volumeUnit}</div>
+              </div>
+            ` : ''}
+            ${filtered.some(b => b.abv && b.volumeProduced) ? `
+              <div class="stat-card">
+                <div class="stat-label">Est. Tax</div>
+                <div class="stat-value">$${filtered.reduce((sum, b) => sum + parseFloat(calculateExciseTax(b.abv, b.volumeProduced, b.volumeUnit) || 0), 0).toFixed(0)}</div>
+              </div>
+            ` : ''}
+            ${filtered.some(b => b.abv) ? `
+              <div class="stat-card">
+                <div class="stat-label">Avg ABV</div>
+                <div class="stat-value">${(filtered.filter(b => b.abv).reduce((sum, b) => sum + parseFloat(b.abv), 0) / filtered.filter(b => b.abv).length).toFixed(1)}%</div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+      document.getElementById('batches-container').innerHTML = html;
+    }
+    renderBatches();
+
+    // Google Sheets Sync Function
+    function syncToSheets() {
+      if (batches.length === 0) {
+        alert('No batches to sync!');
+        return;
+      }
+      
+      // Replace with YOUR deployment URL from Apps Script
+      const deploymentUrl = 'YOUR_DEPLOYMENT_URL_HERE';
+      
+      const data = {
+        action: 'sync',
+        batches: batches,
+        timestamp: new Date().toISOString()
+      };
+      
+      fetch(deploymentUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          alert('✅ Synced ' + batches.length + ' batches to Google Sheets!');
+        } else {
+          alert('❌ Sync failed: ' + result.error);
+        }
+      })
+      .catch(error => {
+        alert('❌ Error: ' + error.message);
+      });
+    }
+  </script>
+</body>
+</html>
